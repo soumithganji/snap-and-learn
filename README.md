@@ -33,7 +33,7 @@
 ## **Project Structure**
 ```
 snap-and-learn/
-├── app.py                     # Main Streamlit app: UI, file uploads, audio playback, dashboard
+├── app.py                     # Main Streamlit app: UI, file uploads, audio playback, parental dashboard
 ├── requirements.txt           # All dependencies for reproducibility
 ├── utils/                     # Helper modules
 │   ├── __init__.py
