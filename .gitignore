@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Streamlit
+.streamlit/
+
+# Data directories
+data/
+audio/
+
+# Keep empty directories
+!data/.gitkeep
+!audio/.gitkeep
+!chroma_db/.gitkeep
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test outputs
+test_*.jpg
+test_*.png
+
+# Model cache
+.cache/
+models/
+
+# Jupyter
+.ipynb_checkpoints/
