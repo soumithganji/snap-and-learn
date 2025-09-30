@@ -93,34 +93,32 @@ if page == "📸 Snap & Learn":
                     # Step 1: Classify image
                     object_name, confidence = classify_image(image)
                     
-                    if confidence < 0.3:
-                        st.warning("Hmm, I'm not sure what that is. Can you try taking another picture?")
-                    else:
-                        # Step 2: Generate story
-                        with st.spinner("✨ Creating a fun story for you..."):
-                            story = generate_story(object_name)
+
+
+                    with st.spinner("✨ Creating a fun story for you..."):
+                        story = generate_story(object_name)
                         
-                        # Step 3: Generate voice
-                        with st.spinner("🎵 Making it talk..."):
-                            audio_file = text_to_speech(story, object_name)
+                    # Step 3: Generate voice
+                    with st.spinner("🎵 Making it talk..."):
+                        audio_file = text_to_speech(story, object_name)
                         
-                        # Display results
-                        st.success(f"### I found a {object_name}! 🎉")
+                    # Display results
+                    st.success(f"### I found a {object_name}! 🎉")
                         
-                        st.markdown("---")
-                        st.markdown("### 📖 Here's something cool:")
-                        st.markdown(f"*{story}*")
+                    st.markdown("---")
+                    st.markdown("### 📖 Here's something cool:")
+                    st.markdown(f"*{story}*")
                         
-                        st.markdown("---")
-                        st.markdown("### 🔊 Listen to the story:")
+                    st.markdown("---")
+                    st.markdown("### 🔊 Listen to the story:")
                         
-                        if audio_file and os.path.exists(audio_file):
-                            st.markdown(get_audio_html(audio_file), unsafe_allow_html=True)
+                    if audio_file and os.path.exists(audio_file):
+                        st.markdown(get_audio_html(audio_file), unsafe_allow_html=True)
                         
-                        # Save to parent log
-                        save_to_parent_log(object_name, confidence, story)
+                    # Save to parent log
+                    save_to_parent_log(object_name, confidence, story)
                         
-                        st.balloons()
+                    st.balloons()
 
     # Instructions
     with st.expander("ℹ️ How to use Snap & Learn"):

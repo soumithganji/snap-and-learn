@@ -1,150 +1,179 @@
 import torch
 from PIL import Image
 from transformers import CLIPProcessor, CLIPModel
+from transformers import BlipProcessor, BlipForConditionalGeneration
 import streamlit as st
+import nltk
+nltk.download("punkt")
+nltk.download("punkt_tab")   # <-- new in latest NLTK
+nltk.download("averaged_perceptron_tagger")
+nltk.download('averaged_perceptron_tagger_eng')
+nltk.download("wordnet")
+nltk.download("omw-1.4")
+from nltk.corpus import wordnet as wn
+from nltk import word_tokenize, pos_tag
+import re
 
-# Cache the model to avoid reloading
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+
 @st.cache_resource
 def load_clip_model():
-    """Load CLIP model and processor"""
-    model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+    model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
     processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
     return model, processor
 
-# Kid-friendly categories
-KID_CATEGORIES = [
-    "a butterfly",
-    "a bird",
-    "a dog",
-    "a cat",
-    "a fish",
-    "an insect",
-    "a rabbit",
-    "a bear",
-    "a flower",
-    "a tree",
-    "a leaf",
-    "a plant",
-    "grass",
-    "an apple",
-    "a banana",
-    "an orange",
-    "a strawberry",
-    "vegetables",
-    "a carrot",
-    "broccoli",
-    "a toy car",
-    "a doll",
-    "a ball",
-    "building blocks",
-    "a teddy bear",
-    "a robot",
-    "a puzzle",
-    "a book",
-    "crayons",
-    "a pencil",
-    "a painting",
-    "a drawing",
-    "colored pencils",
-    "a rainbow",
-    "the sun",
-    "the moon",
-    "clouds",
-    "stars",
-    "a rock",
-    "sand",
-    "water",
-    "a bicycle",
-    "a car",
-    "a train",
-    "an airplane",
-    "a boat",
-    "a house",
-    "a castle",
-    "a mountain",
-    "the ocean",
-    "a beach"
+@st.cache_resource
+def load_caption_model():
+    # BLIP captioning model
+    processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
+    model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base").to(device)
+    return model, processor
+
+
+def ensure_nltk():
+    nltk_data = ["punkt", "averaged_perceptron_tagger", "wordnet", "omw-1.4"]
+    for pkg in nltk_data:
+        try:
+            nltk.data.find(pkg)
+        except LookupError:
+            nltk.download(pkg, quiet=True)
+
+ensure_nltk()
+
+
+def caption_image(image: Image.Image, max_length: int = 40) -> str:
+    blip_model, blip_processor = load_caption_model()
+    inputs = blip_processor(images=image, return_tensors="pt").to(device)
+    generated_ids = blip_model.generate(**inputs, max_length=max_length)
+    caption = blip_processor.tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+    caption = caption.strip().lower()
+    return caption
+
+
+def extract_nouns(text: str):
+    tokens = word_tokenize(text)
+    tags = pos_tag(tokens)
+    nouns = [w for w, t in tags if t.startswith("NN")]
+    nouns = [re.sub(r'[^a-z0-9\s\-]', '', n).strip() for n in nouns if n.strip()]
+    return list(dict.fromkeys(nouns))
+
+def expand_candidates_with_wordnet(nouns, max_per_noun=20):
+    candidates = set()
+    for noun in nouns:
+        noun = noun.lower()
+        candidates.add(noun)
+        synsets = wn.synsets(noun, pos=wn.NOUN)
+        for s in synsets[:3]:
+            for l in s.lemmas()[:6]:
+                candidates.add(l.name().replace("_", " ").lower())
+            for hy in s.hyponyms()[:6]:
+                for l in hy.lemmas()[:6]:
+                    candidates.add(l.name().replace("_", " ").lower())
+            for hypr in s.hypernyms()[:3]:
+                for l in hypr.lemmas()[:4]:
+                    candidates.add(l.name().replace("_", " ").lower())
+    cleaned = []
+    for c in candidates:
+        if 1 < len(c) <= 40 and re.match(r'^[a-z0-9 \-]+$', c):
+            cleaned.append(c)
+        if len(cleaned) >= max_per_noun * max(1, len(nouns)):
+            break
+    return list(dict.fromkeys(cleaned))
+
+
+PROMPT_TEMPLATES = [
+    "a photo of a {}",
+    "a picture of a {}",
+    "a drawing of a {}",
+    "a toy {}",
+    "an illustration of a {}",
+    "a {} on a table",
 ]
 
-def classify_image(image):
-    """
-    Classify an image using CLIP model
-    
-    Args:
-        image: PIL Image object
-    
-    Returns:
-        tuple: (object_name, confidence_score)
-    """
-    # Load model
-    model, processor = load_clip_model()
-    
-    # Prepare inputs
-    inputs = processor(
-        text=KID_CATEGORIES,
-        images=image,
-        return_tensors="pt",
-        padding=True
-    )
-    
-    # Get predictions
-    with torch.no_grad():
-        outputs = model(**inputs)
-        logits_per_image = outputs.logits_per_image
-        probs = logits_per_image.softmax(dim=1)
-    
-    # Get top prediction
-    confidence, idx = probs[0].max(0)
-    object_name = KID_CATEGORIES[idx.item()].replace("a ", "").replace("an ", "")
-    
-    return object_name, confidence.item()
+def build_prompts_for_labels(labels):
+    prompts = []
+    mapping = []
+    for lbl in labels:
+        for t in PROMPT_TEMPLATES:
+            prompts.append(t.format(lbl))
+            mapping.append(lbl)
+    return prompts, mapping
 
-def get_category_type(object_name):
-    """
-    Categorize the object into broader categories for story generation
-    
-    Args:
-        object_name: string name of detected object
-    
-    Returns:
-        string: category type (animal, plant, food, toy, nature, vehicle)
-    """
-    animals = ["butterfly", "bird", "dog", "cat", "fish", "insect", "rabbit", "bear"]
-    plants = ["flower", "tree", "leaf", "plant", "grass"]
-    food = ["apple", "banana", "orange", "strawberry", "vegetables", "carrot", "broccoli"]
-    toys = ["toy car", "doll", "ball", "building blocks", "teddy bear", "robot", "puzzle"]
-    art = ["book", "crayons", "pencil", "painting", "drawing", "colored pencils"]
-    nature = ["rainbow", "sun", "moon", "clouds", "stars", "rock", "sand", "water", "mountain", "ocean", "beach"]
-    vehicles = ["bicycle", "car", "train", "airplane", "boat"]
-    
-    object_lower = object_name.lower()
-    
-    for animal in animals:
-        if animal in object_lower:
-            return "animal"
-    
-    for plant in plants:
-        if plant in object_lower:
-            return "plant"
-    
-    for f in food:
-        if f in object_lower:
-            return "food"
-    
-    for toy in toys:
-        if toy in object_lower:
-            return "toy"
-    
-    for a in art:
-        if a in object_lower:
-            return "art"
-    
-    for n in nature:
-        if n in object_lower:
-            return "nature"
-    
-    for v in vehicles:
-        if v in object_lower:
-            return "vehicle"
-    
+@st.cache_resource
+def get_clip_models_for_device():
+    model, processor = load_clip_model()
+    return model, processor
+
+def classify_image(image, top_k=3):
+    caption = caption_image(image)
+    nouns = extract_nouns(caption)
+    if not nouns:
+        tokens = [w for w in re.findall(r'\w+', caption) if len(w) > 2]
+        nouns = tokens[:3]
+
+    labels = expand_candidates_with_wordnet(nouns, max_per_noun=12)
+    if not labels:
+        labels = nouns or ["object"]
+
+    prompts, mapping = build_prompts_for_labels(labels)
+   
+    clip_model, clip_processor = get_clip_models_for_device()
+    inputs = clip_processor(text=prompts, images=image, return_tensors="pt", padding=True).to(device)
+    with torch.no_grad():
+        outputs = clip_model(**inputs)
+        logits_per_image = outputs.logits_per_image 
+        probs_per_prompt = logits_per_image.softmax(dim=1)[0].cpu()  # softmax per prompt
+
+    # Aggregate per label
+    from collections import defaultdict
+    label_scores = defaultdict(list)
+    for i, lbl in enumerate(mapping):
+        label_scores[lbl].append(probs_per_prompt[i].item())
+
+    # Instead of averaging, take the max for better confidence
+    label_logits = {lbl: max(scores) for lbl, scores in label_scores.items()}
+
+    # Convert logits to probabilities across labels
+    labels_list, logits_vals = zip(*label_logits.items())
+    probs = torch.softmax(torch.tensor(logits_vals), dim=0)
+
+    # Pick top
+    idx = probs.argmax().item()
+    object_name, confidence = labels_list[idx], probs[idx].item()
+
+    return object_name, confidence
+
+
+
+def get_category_type(label):
+    synsets = wn.synsets(label, pos=wn.NOUN)
+    keywords = {"animal", "plant", "food", "vehicle", "toy", "person", "furniture", "electronics"}
+
+    checked = set()
+    for s in synsets[:4]:
+        queue = [s]
+        depth = 0
+        while queue and depth < 6:
+            next_q = []
+            for q in queue:
+                for h in q.hypernyms():
+                    for l in h.lemmas()[:4]:
+                        checked.add(l.name().lower().replace("_", " "))
+                    next_q.append(h)
+            queue = next_q
+            depth += 1
+
+    if any(k in checked for k in ("animal", "fauna")):
+        return "animal"
+    if any(k in checked for k in ("plant", "flora", "vegetable", "tree", "flower")):
+        return "plant"
+    if any(k in checked for k in ("food", "foodstuff", "edible")):
+        return "food"
+    if any(k in checked for k in ("vehicle", "conveyance", "car", "airplane", "ship")):
+        return "vehicle"
+    if any(k in checked for k in ("toy", "plaything")):
+        return "toy"
+    if any(k in checked for k in ("instrumentality", "artifact", "device", "electronics")):
+        return "object"
     return "object"
