@@ -89,7 +89,7 @@ snap-and-learn/
 ## **How to Run**
 1. **Clone repo**:
 ```bash
-git clone <https://github.com/soumithganji/snap-and-learn>
+git clone https://github.com/soumithganji/snap-and-learn
 cd snap-and-learn
 ```
 2. **Install dependencies**:
