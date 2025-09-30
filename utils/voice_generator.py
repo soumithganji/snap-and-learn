@@ -3,16 +3,6 @@ import os
 import hashlib
 
 def text_to_speech(text, object_name):
-    """
-    Convert text to speech using gTTS (Google Text-to-Speech)
-    
-    Args:
-        text: string text to convert
-        object_name: string name of object (for filename)
-    
-    Returns:
-        string: path to generated audio file
-    """
     try:
         # Create audio directory if it doesn't exist
         os.makedirs("audio", exist_ok=True)
@@ -36,10 +26,6 @@ def text_to_speech(text, object_name):
         return None
 
 def cleanup_old_audio_files(max_files=50):
-    """
-    Clean up old audio files to save space
-    Keeps only the most recent max_files
-    """
     try:
         audio_dir = "audio"
         if not os.path.exists(audio_dir):
