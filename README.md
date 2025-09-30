@@ -34,7 +34,7 @@
 ```
 snap-and-learn/
 ├── app.py                     # Main Streamlit app: UI, file uploads, audio playback, parental dashboard
-├── requirements.txt           # All dependencies for reproducibility
+├── requirements.txt           # Dependencies
 ├── utils/                     # Helper modules
 │   ├── __init__.py
 │   ├── image_processor.py     # Image captioning, noun extraction, CLIP classification
