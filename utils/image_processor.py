@@ -144,7 +144,7 @@ def classify_image(image, top_k=3):
     print(aggregated)
     print(aggregated[0])
     
-    return object_name, confidence
+    return object_name
 
 
 

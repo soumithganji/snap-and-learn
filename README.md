@@ -25,7 +25,7 @@
 | **NLP / Knowledge Expansion** | NLTK (tokenization, POS tagging, WordNet) | Extracts nouns from captions and expands them using hyponyms, hypernyms, and synonyms to improve recognition accuracy. |
 | **Story Generation** | LangChain + Mistral 7B Instruct | Generates age-appropriate, playful content using LLMs with a prompt template designed specifically for young children. |
 | **Text-to-Speech** | gTTS (Google TTS) | Converts the generated stories into voice for interactive audio playback. |
-| **Data Storage** | JSON (Parent Log) | Keeps a minimal record of child interactions (object detected, confidence, timestamp, content) for parental insights. |
+| **Data Storage** | JSON (Parent Log) | Keeps a minimal record of child interactions (object detected, timestamp, content) for parental insights. |
 | **Deployment / Infra** | Local or Cloud (Streamlit-compatible) | Modular backend, easy to deploy incrementally; can scale to Azure/GCP if needed. |
 
 ---

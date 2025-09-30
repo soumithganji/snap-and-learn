@@ -32,14 +32,13 @@ def load_parent_log():
             return json.load(f)
     return {"sessions": []}
 
-def save_to_parent_log(object_detected, confidence, story):
+def save_to_parent_log(object_detected, story):
     """Save interaction to parent log"""
     log = load_parent_log()
     
     session = {
         "timestamp": datetime.now().isoformat(),
         "object_detected": object_detected,
-        "confidence": float(confidence),
         "story_generated": story
     }
     
@@ -91,7 +90,7 @@ if page == "📸 Snap & Learn":
                     image = Image.open(uploaded_file)
                     
                     # Step 1: Classify image
-                    object_name, confidence = classify_image(image)
+                    object_name = classify_image(image)
                     
                     with st.spinner("✨ Creating a fun story for you..."):
                         story = generate_story(object_name)
@@ -114,7 +113,7 @@ if page == "📸 Snap & Learn":
                         st.markdown(get_audio_html(audio_file), unsafe_allow_html=True)
                         
                     # Save to parent log
-                    save_to_parent_log(object_name, confidence, story)
+                    save_to_parent_log(object_name, story)
                         
                     st.balloons()
 
@@ -169,7 +168,6 @@ else:
                 f"{datetime.fromisoformat(session['timestamp']).strftime('%b %d, %I:%M %p')}"
             ):
                 st.markdown(f"**Object:** {session['object_detected']}")
-                st.markdown(f"**Confidence:** {session['confidence']:.0%}")
                 st.markdown(f"**Time:** {session['timestamp']}")
                 st.markdown(f"**Story Generated:**")
                 st.info(session['story_generated'])
