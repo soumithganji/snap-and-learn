@@ -61,7 +61,7 @@ snap-and-learn/
   1. **Captioning:** Uses BLIP to convert images to text.
   2. **Noun Extraction:** Tokenizes captions and extracts nouns via NLTK POS tagging.
   3. **Candidate Expansion:** Uses WordNet to include synonyms, hypernyms, and hyponyms to improve recognition.
-  4. **Zero-shot Classification:** CLIP matches prompts derived from candidate labels to the image.(slow inference due to CLIPProcessor, streamlit doe supporting fast processor)
+  4. **Zero-shot Classification:** CLIP matches prompts derived from candidate labels to the image.(slow inference due to CLIPProcessor, streamlit doesn't supporting fast processor)
   5. Returns top object.
 
 ### **3. `utils/story_generator.py`**
