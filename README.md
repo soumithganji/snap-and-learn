@@ -23,9 +23,9 @@
 | **Image Captioning** | BLIP (Salesforce BLIP-Image-Captioning-Base) | Converts uploaded images to natural language captions for downstream processing. |
 | **Image Classification** | CLIP (OpenAI CLIP-ViT-Base-Patch32) | Maps captions and candidate prompts to likely objects using zero-shot classification. |
 | **NLP / Knowledge Expansion** | NLTK (tokenization, POS tagging, WordNet) | Extracts nouns from captions and expands them using hyponyms, hypernyms, and synonyms to improve recognition accuracy. |
-| **Story Generation** | LangChain + ChatNVIDIA (Mistral 7B Instruct) | Generates age-appropriate, playful stories using LLMs with a prompt template designed specifically for young children. |
+| **Story Generation** | LangChain + Mistral 7B Instruct | Generates age-appropriate, playful content using LLMs with a prompt template designed specifically for young children. |
 | **Text-to-Speech** | gTTS (Google TTS) | Converts the generated stories into voice for interactive audio playback. |
-| **Data Storage** | JSON (Parent Log) | Keeps a minimal record of child interactions (object detected, confidence, timestamp, story) for parental insights. |
+| **Data Storage** | JSON (Parent Log) | Keeps a minimal record of child interactions (object detected, confidence, timestamp, content) for parental insights. |
 | **Deployment / Infra** | Local or Cloud (Streamlit-compatible) | Modular backend, easy to deploy incrementally; can scale to Azure/GCP if needed. |
 
 ---
@@ -38,7 +38,7 @@ snap-and-learn/
 ├── utils/                     # Helper modules
 │   ├── __init__.py
 │   ├── image_processor.py     # Image captioning, noun extraction, CLIP classification
-│   ├── story_generator.py     # Story generation via LLM + fallback templates
+│   ├── story_generator.py     # Content generation via LLM + fallback templates
 │   └── voice_generator.py     # Text-to-speech conversion and audio management
 ├── data/                      # Parent log JSON storage
 └── audio/                     # Generated voice files

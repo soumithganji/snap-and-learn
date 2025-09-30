@@ -5,7 +5,7 @@ from transformers import BlipProcessor, BlipForConditionalGeneration
 import streamlit as st
 import nltk
 nltk.download("punkt")
-nltk.download("punkt_tab")   # <-- new in latest NLTK
+nltk.download("punkt_tab")
 nltk.download("averaged_perceptron_tagger")
 nltk.download('averaged_perceptron_tagger_eng')
 nltk.download("wordnet")
