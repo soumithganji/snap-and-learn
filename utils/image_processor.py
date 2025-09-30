@@ -20,7 +20,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 @st.cache_resource
 def load_clip_model():
     model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
-    processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32", use_fast=True)
+    processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
     return model, processor
 
 @st.cache_resource
