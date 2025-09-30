@@ -20,13 +20,13 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 @st.cache_resource
 def load_clip_model():
     model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
-    processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+    processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32", use_fast=True)
     return model, processor
 
 @st.cache_resource
 def load_caption_model():
     # BLIP captioning model
-    processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
+    processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base", use_fast=True)
     model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base").to(device)
     return model, processor
 
