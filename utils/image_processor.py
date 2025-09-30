@@ -123,25 +123,27 @@ def classify_image(image, top_k=3):
     with torch.no_grad():
         outputs = clip_model(**inputs)
         logits_per_image = outputs.logits_per_image 
-        probs_per_prompt = logits_per_image.softmax(dim=1)[0].cpu()  # softmax per prompt
+        probs = logits_per_image.softmax(dim=1) 
+    probs = probs[0].cpu() 
 
-    # Aggregate per label
+
     from collections import defaultdict
     label_scores = defaultdict(list)
     for i, lbl in enumerate(mapping):
-        label_scores[lbl].append(probs_per_prompt[i].item())
+        label_scores[lbl].append(probs[i].item())
 
-    # Instead of averaging, take the max for better confidence
-    label_logits = {lbl: max(scores) for lbl, scores in label_scores.items()}
 
-    # Convert logits to probabilities across labels
-    labels_list, logits_vals = zip(*label_logits.items())
-    probs = torch.softmax(torch.tensor(logits_vals), dim=0)
+    aggregated = [(lbl, sum(scores) / len(scores)) for lbl, scores in label_scores.items()]
 
-    # Pick top
-    idx = probs.argmax().item()
-    object_name, confidence = labels_list[idx], probs[idx].item()
+    aggregated.sort(key=lambda x: x[1], reverse=True)
 
+
+    top = aggregated[:top_k]
+
+    object_name, confidence = aggregated[0]
+    print(aggregated)
+    print(aggregated[0])
+    
     return object_name, confidence
 
 
