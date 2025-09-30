@@ -93,8 +93,6 @@ if page == "📸 Snap & Learn":
                     # Step 1: Classify image
                     object_name, confidence = classify_image(image)
                     
-
-
                     with st.spinner("✨ Creating a fun story for you..."):
                         story = generate_story(object_name)
                         

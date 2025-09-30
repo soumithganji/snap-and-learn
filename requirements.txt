@@ -10,3 +10,4 @@ langchain
 langchain-nvidia-ai-endpoints
 gradio
 nltk
+torchvision
